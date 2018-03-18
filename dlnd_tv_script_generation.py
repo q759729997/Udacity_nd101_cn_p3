@@ -234,10 +234,13 @@ def get_init_cell(batch_size, rnn_size):
     :return: Tuple (cell, initialize state)
     """
     # TODO: Implement Function
+    # basic LSTM cell
+    def make_lstm(rnn_size):
+        return tf.contrib.rnn.BasicLSTMCell(rnn_size)
     #LSTM cell
-    lstm = tf.contrib.rnn.BasicLSTMCell(rnn_size)
+    #lstm = tf.contrib.rnn.BasicLSTMCell(rnn_size)
     #drop = tf.contrib.rnn.DropoutWrapper(lstm)
-    cell = tf.contrib.rnn.MultiRNNCell([lstm])
+    cell = tf.contrib.rnn.MultiRNNCell([make_lstm(rnn_size) for _ in range(2)])
     #initial state
     #assert type(batch_size) == 'int', 'batch_size is not a tensor'
     initial_state = cell.zero_state(batch_size, tf.float32)#第一个参数不接受tensor
@@ -329,7 +332,7 @@ def build_nn(cell, rnn_size, input_data, vocab_size, embed_dim):
     :return: Tuple (Logits, FinalState)
     """
     # TODO: Implement Function
-    inputs = get_embed(input_data, vocab_size, rnn_size)
+    inputs = get_embed(input_data, vocab_size, embed_dim)
     outputs, final_state = build_rnn(cell, inputs)
     logits = tf.contrib.layers.fully_connected(outputs, vocab_size,activation_fn=None)
     return logits, final_state
@@ -387,7 +390,8 @@ def get_batches(int_text, batch_size, seq_length):
         input_batch = []
         target_batch = []
         for j in range(0, batch_size):
-            input_i = i * batch_size * seq_length + j * seq_length
+            #input_i = i * batch_size * seq_length + j * seq_length
+            input_i = i * seq_length + j * seq_length * n_batches
             target_i = input_i + 1
             input_ = int_text[input_i:input_i + seq_length]
             target_ = int_text[target_i:target_i + seq_length]
@@ -416,11 +420,11 @@ tests.test_get_batches(get_batches)
 # - Set `learning_rate` to the learning rate.
 # - Set `show_every_n_batches` to the number of batches the neural network should print progress.
 
-# In[22]:
+# In[14]:
 
 
 # Number of Epochs
-num_epochs = 110
+num_epochs = 160
 # Batch Size
 batch_size = 64
 # RNN Size
@@ -428,9 +432,9 @@ rnn_size = 256
 # Embedding Dimension Size
 embed_dim = 300
 # Sequence Length
-seq_length = 200
+seq_length = 12
 # Learning Rate
-learning_rate = 0.01
+learning_rate = 0.005
 # Show stats for every n number of batches
 show_every_n_batches = 10
 
@@ -443,7 +447,7 @@ save_dir = './save'
 # ### Build the Graph
 # Build the graph using the neural network you implemented.
 
-# In[23]:
+# In[15]:
 
 
 """
@@ -480,7 +484,7 @@ with train_graph.as_default():
 # ## Train
 # Train the neural network on the preprocessed data.  If you have a hard time getting a good loss, check the [forms](https://discussions.udacity.com/) to see if anyone is having the same problem.
 
-# In[24]:
+# In[16]:
 
 
 """
@@ -519,7 +523,7 @@ with tf.Session(graph=train_graph) as sess:
 # ## Save Parameters
 # Save `seq_length` and `save_dir` for generating a new TV script.
 
-# In[25]:
+# In[17]:
 
 
 """
@@ -531,7 +535,7 @@ helper.save_params((seq_length, save_dir))
 
 # # Checkpoint
 
-# In[26]:
+# In[18]:
 
 
 """
@@ -556,7 +560,7 @@ seq_length, load_dir = helper.load_params()
 # 
 # Return the tensors in the following tuple `(InputTensor, InitialStateTensor, FinalStateTensor, ProbsTensor)` 
 
-# In[27]:
+# In[19]:
 
 
 def get_tensors(loaded_graph):
@@ -582,7 +586,7 @@ tests.test_get_tensors(get_tensors)
 # ### Choose Word
 # Implement the `pick_word()` function to select the next word using `probabilities`.
 
-# In[28]:
+# In[22]:
 
 
 def pick_word(probabilities, int_to_vocab):
@@ -593,8 +597,8 @@ def pick_word(probabilities, int_to_vocab):
     :return: String of the predicted word
     """
     # TODO: Implement Function
-    index_ = np.where(probabilities == np.max(probabilities))[0][0]
-    return int_to_vocab[index_]
+    #index_ = np.where(probabilities == np.max(probabilities))[0][0]
+    return np.random.choice(list(int_to_vocab.values()), 1, p=probabilities)[0]
 
 
 """
@@ -606,7 +610,7 @@ tests.test_pick_word(pick_word)
 # ## Generate TV Script
 # This will generate the TV script for you.  Set `gen_length` to the length of TV script you want to generate.
 
-# In[29]:
+# In[23]:
 
 
 gen_length = 200

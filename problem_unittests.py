@@ -205,10 +205,14 @@ def test_get_embed(get_embed):
 
 
 def test_build_rnn(build_rnn):
+    # basic LSTM cell
+    def make_lstm(rnn_size):
+        return tf.contrib.rnn.BasicLSTMCell(rnn_size)
+    
     with tf.Graph().as_default():
         test_rnn_size = 256
         test_rnn_layer_size = 2
-        test_cell = rnn.MultiRNNCell([rnn.BasicLSTMCell(test_rnn_size) for _ in range(test_rnn_layer_size)])
+        test_cell = rnn.MultiRNNCell([make_lstm(test_rnn_size) for _ in range(test_rnn_layer_size)])
         #test_cell = rnn.MultiRNNCell([rnn.BasicLSTMCell(test_rnn_size)] * test_rnn_layer_size)
 
         test_inputs = tf.placeholder(tf.float32, [None, None, test_rnn_size])
@@ -230,14 +234,18 @@ def test_build_rnn(build_rnn):
 
 
 def test_build_nn(build_nn):
+    # basic LSTM cell
+    def make_lstm(rnn_size):
+        return tf.contrib.rnn.BasicLSTMCell(rnn_size)
     with tf.Graph().as_default():
-        test_input_data_shape = [128, 5]
+        #test_input_data_shape = [128, 5]
+        test_input_data_shape = [None, 5]
         test_input_data = tf.placeholder(tf.int32, test_input_data_shape)
         test_rnn_size = 256
         test_embed_dim = 300
         test_rnn_layer_size = 2
         test_vocab_size = 27
-        test_cell = rnn.MultiRNNCell([rnn.BasicLSTMCell(test_rnn_size) for _ in range(test_rnn_layer_size)])
+        test_cell = rnn.MultiRNNCell([make_lstm(test_rnn_size) for _ in range(test_rnn_layer_size)])
         #test_cell = rnn.MultiRNNCell([rnn.BasicLSTMCell(test_rnn_size)] * test_rnn_layer_size)
 
         logits, final_state = build_nn(test_cell, test_rnn_size, test_input_data, test_vocab_size, test_embed_dim)
